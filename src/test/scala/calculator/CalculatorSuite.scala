@@ -51,4 +51,53 @@ class CalculatorSuite extends FunSuite with ShouldMatchers {
     assert(resultRed2() == "red")
   }
 
+  test("ca1") {
+    val values: Map[String, Signal[Double]] = Calculator.computeValues(Map(
+      ("a" -> Var(Literal(2))),
+      ("b" -> Var(Ref("a")))
+    ))
+    assert(values("b")() == 2)
+  }
+
+  test("ca2") {
+    val values: Map[String, Signal[Double]] = Calculator.computeValues(Map(
+      ("a" -> Var(Literal(2))),
+      ("b" -> Var(Plus(Literal(1), Ref("a"))))
+    ))
+    assert(values("b")() == 3)
+  }
+
+  test("ca3") {
+    val values: Map[String, Signal[Double]] = Calculator.computeValues(Map(
+      ("a" -> Var(Literal(2))),
+      ("b" -> Var(Plus(Literal(1), Ref("a")))),
+      ("c" -> Var(Times(Ref("b"), Ref("a"))))
+    ))
+    assert(values("a")() == 2)
+    assert(values("b")() == 3)
+    assert(values("c")() == 6)
+  }
+
+  test("ca4") {
+    val values: Map[String, Signal[Double]] = Calculator.computeValues(Map(
+      ("d" -> Var(Plus(Ref("e"), Literal(1)))),
+      ("e" -> Var(Plus(Ref("d"), Literal(1))))
+    ))
+    // d = e + 1
+    // e = d + 1
+    assert(values("d")().isNaN)
+    assert(values("e")().isNaN)
+  }
+
+  test("ca5") {
+    val values: Map[String, Signal[Double]] = Calculator.computeValues(Map(
+      ("d" -> Var(Plus(Ref("e"), Literal(1)))),
+      ("e" -> Var(Plus(Ref("f"), Literal(1)))),
+      ("f" -> Var(Plus(Ref("e"), Literal(1))))
+    ))
+    assert(values("d")().isNaN)
+    assert(values("e")().isNaN)
+    assert(values("f")().isNaN)
+  }
+
 }

@@ -15,8 +15,7 @@ object Calculator {
       namedExpressions: Map[String, Signal[Expr]]): Map[String, Signal[Double]] = {
     namedExpressions.foldLeft[Map[String, Signal[Double]]](Map()){
       (a: Map[String, Signal[Double]], t: (String, Signal[Expr])) => {
-        val value: Signal[Double] = Var(eval(t._2(), namedExpressions))
-        a + (t._1 -> value)
+        a + (t._1 -> Var(eval(t._2(), namedExpressions)))
       }
     }
   }
@@ -24,7 +23,7 @@ object Calculator {
   def eval(expr: Expr, references: Map[String, Signal[Expr]]): Double = {
     expr match {
       case l: Literal => l.v
-      case r: Ref => eval(getReferenceExpr(r.name, references), references)
+      case r: Ref => eval(getReferenceExpr(r.name, references), references - r.name)
       case p: Plus => eval(p.a, references) + eval(p.b, references)
       case p: Minus => eval(p.a, references) - eval(p.b, references)
       case p: Times => eval(p.a, references) * eval(p.b, references)
@@ -37,7 +36,7 @@ object Calculator {
    *  If the variable is not known, returns a literal NaN.
    */
   private def getReferenceExpr(name: String,
-      references: Map[String, Signal[Expr]]) = {
+      references: Map[String, Signal[Expr]]): Expr = {
     references.get(name).fold[Expr] {
       Literal(Double.NaN)
     } { exprSignal =>
